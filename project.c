@@ -1,0 +1,180 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_EMP 100
+
+typedef struct {
+  char empId[20];
+  char name[50];
+  char position[15];
+  double baseSalary;
+  int workDay;
+} Employee;
+
+Employee employees[MAX_EMP];
+int empCount = 0;
+
+//  tìm chỉ số nhân viên theo empId
+int findEmployeeIndex(char empId[]) {
+  for (int i = 0; i < empCount; i++) {
+    if (strcmp(employees[i].empId, empId) == 0)
+      return i;
+  }
+  return -1;
+}
+
+//  thêm nhân viên
+void addEmployee() {
+  if (empCount >= MAX_EMP) {
+    printf(" Danh sách nhân viên đã đầy!\n");
+    return;
+  }
+
+  Employee e;
+  printf("\n Thêm nhân viên mới\n");
+
+  // Nhập empId
+  do {
+    printf("Nhập mã nhân viên (empId): ");
+    fgets(e.empId, sizeof(e.empId), stdin);
+    e.empId[strcspn(e.empId, "\n")] = '\0';
+
+    if (strlen(e.empId) == 0) {
+      printf("empId không được để trống!\n");
+      continue;
+    }
+    if (findEmployeeIndex(e.empId) != -1) {
+      printf("empId đã tồn tại! Nhập lại.\n");
+      continue;
+    }
+    break;
+  } while (1);
+
+  // Nhập tên nhân viên
+  do {
+    printf("Nhập tên nhân viên: ");
+    fgets(e.name, sizeof(e.name), stdin);
+    e.name[strcspn(e.name, "\n")] = '\0';
+    if (strlen(e.name) == 0)
+      printf("Tên không được để trống!\n");
+  } while (strlen(e.name) == 0);
+
+  // Nhập chức vụ
+  do {
+    printf("Nhập chức vụ: ");
+    fgets(e.position, sizeof(e.position), stdin);
+    e.position[strcspn(e.position, "\n")] = '\0';
+    if (strlen(e.position) == 0)
+      printf("Chức vụ không được để trống!\n");
+  } while (strlen(e.position) == 0);
+
+  do {
+    printf("Nhập lương cơ bản: ");
+    scanf("%lf", &e.baseSalary);
+    getchar();
+    if (e.baseSalary <= 0)
+      printf("Lương phải lớn hơn 0!\n");
+  } while (e.baseSalary <= 0);
+
+  e.workDay = 0; // mặc định theo SRS
+
+  employees[empCount++] = e;
+
+  printf("Thêm nhân viên thành công!\n");
+}
+
+//  cập nhật nhân viên
+void updateEmployee() {
+  char id[20];
+  printf("\nCập nhật hồ sơ nhân viên\n");
+
+  printf("Nhập empId cần sửa: ");
+  fgets(id, sizeof(id), stdin);
+  id[strcspn(id, "\n")] = '\0';
+
+  int idx = findEmployeeIndex(id);
+  if (idx == -1) {
+    printf("Không tìm thấy nhân viên!\n");
+    return;
+  }
+
+  printf("Nhập chức vụ mới: ");
+  fgets(employees[idx].position, sizeof(employees[idx].position), stdin);
+  employees[idx].position[strcspn(employees[idx].position, "\n")] = '\0';
+
+  do {
+    printf("Nhập lương cơ bản mới: ");
+    scanf("%lf", &employees[idx].baseSalary);
+    getchar();
+    if (employees[idx].baseSalary <= 0)
+      printf("Lương phải lớn hơn 0!\n");
+  } while (employees[idx].baseSalary <= 0);
+
+  printf("Cập nhật thành công!\n");
+}
+// quản lý nhân viên (sa thải nhân viên)
+void deleteEmployee() {
+  printf("\nXóa nhân viên\n");
+  char id[20];
+  printf("Nhập empId cần xóa: ");
+  fgets(id, sizeof(id), stdin);
+  id[strcspn(id, "\n")] = '\0';
+  int idx = findEmployeeIndex(id);
+  if (idx == -1) {
+    printf("Không tìm thấy nhân viên!\n");
+    return;
+  }
+  for (int i = idx; i < empCount - 1; i++) {
+    employees[i] = employees[i + 1];
+  }
+  empCount--;
+  printf("Xóa nhân viên thành công!\n");
+}
+
+// menu
+void showMenu() {
+  printf("\n===== QUẢN LÝ NHÂN VIÊN & CHẤM CÔNG =====\n");
+  printf("1. Thêm nhân viên\n");
+  printf("2. Cập nhật hồ sơ\n");
+  printf("3. Xóa nhân viên\n");
+  printf("4. Hiển thị danh sách\n");
+  printf("5. Tìm kiếm nhân viên\n");
+  printf("6. Sắp xếp danh sách\n");
+  printf("7. Chấm công ngày\n");
+  printf("8. Xem bảng công\n");
+  printf("9. Thoát\n");
+  printf("=========================================\n");
+  printf("Chọn chức năng: ");
+}
+// hàm main
+int main() {
+  int choice;
+
+  do {
+    showMenu();
+    scanf("%d", &choice);
+    getchar();
+
+    switch (choice) {
+    case 1:
+      addEmployee();
+      break;
+    case 2:
+      updateEmployee();
+      break;
+    case 3:
+      deleteEmployee();
+
+      break;
+    case 9:
+      printf("Thoát chương trình...\n");
+      break;
+    default:
+      printf("Lựa chọn không hợp lệ!\n");
+    }
+
+  } while (choice != 0);
+
+  return 0;
+}
