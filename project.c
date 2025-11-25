@@ -11,6 +11,7 @@ typedef struct {
   double baseSalary;
   int workDay;
 } Employee;
+
 // nguyên mẫu hàm
 void addEmployee();
 void updateEmployee();
@@ -18,6 +19,59 @@ void deleteEmployee();
 void displayEmployees();
 void showMenu();
 void searchEmployee();
+void sortEmployees();
+
+// hàm main
+int main() {
+  int choice;
+  do {
+    showMenu();
+    scanf("%d", &choice);
+    getchar();
+    switch (choice) {
+    case 1:
+      addEmployee();
+      break;
+    case 2:
+      updateEmployee();
+      break;
+    case 3:
+      deleteEmployee();
+      break;
+    case 4:
+      displayEmployees();
+      break;
+    case 5:
+      searchEmployee();
+      break;
+    case 6:
+      sortEmployees();
+      break;
+    case 9:
+      printf("Thoát chương trình...\n");
+      break;
+    default:
+      printf("Lựa chọn không hợp lệ!\n");
+    }
+  } while (choice != 9);
+  return 0;
+}
+
+// menu
+void showMenu() {
+  printf("\n===== QUẢN LÝ NHÂN VIÊN & CHẤM CÔNG =====\n");
+  printf("1. Thêm nhân viên\n");
+  printf("2. Cập nhật hồ sơ\n");
+  printf("3. Xóa nhân viên\n");
+  printf("4. Hiển thị danh sách\n");
+  printf("5. Tìm kiếm nhân viên\n");
+  printf("6. Sắp xếp danh sách\n");
+  printf("7. Chấm công ngày\n");
+  printf("8. Xem bảng công\n");
+  printf("9. Thoát\n");
+  printf("=========================================\n");
+  printf("Chọn chức năng: ");
+}
 
 // mảng lưu trữ nhân viên
 Employee employees[MAX_EMP];
@@ -141,17 +195,29 @@ void deleteEmployee() {
 }
 // hiển thị danh sách nhân viên
 void displayEmployees() {
-  printf("\nDanh sách nhân viên:\n");
-  printf("------------------------------------------------------------\n");
-  printf("| %-10s | %-20s | %-15s | %-10s |\n", "EmpId", "Tên", "Chức vụ",
-         "Lương cơ bản");
-  printf("------------------------------------------------------------\n");
-  for (int i = 0; i < empCount; i++) {
-    printf("| %-10s | %-20s | %-15s | %-10.2f |\n", employees[i].empId,
-           employees[i].name, employees[i].position, employees[i].baseSalary);
+  if (empCount == 0) {
+    printf("\nDanh sách nhân viên hiện đang trống.\n");
+    return;
   }
-  printf("------------------------------------------------------------\n");
+
+  printf("\nDanh sách nhân viên:\n");
+  printf("---------------------------------------------------------------------"
+         "----------\n");
+  printf("| %-10s | %-20s | %-15s | %-12s | %-10s |\n", "EmpId", "Tên",
+         "Chức vụ", "Lương cơ bản", "Ngày công");
+  printf("---------------------------------------------------------------------"
+         "----------\n");
+
+  for (int i = 0; i < empCount; i++) {
+    printf("| %-10s | %-20s | %-15s | %-12.2f | %-10d |\n", employees[i].empId,
+           employees[i].name, employees[i].position, employees[i].baseSalary,
+           employees[i].workDay);
+  }
+
+  printf("---------------------------------------------------------------------"
+         "----------\n");
 }
+
 // tìm kiếm nhân viên theo empId hoặc tên
 void searchEmployee() {
   char keyword[50];
@@ -181,56 +247,49 @@ void searchEmployee() {
   printf("------------------------------------------------------------\n");
 }
 
-// menu
-void showMenu() {
-  printf("\n===== QUẢN LÝ NHÂN VIÊN & CHẤM CÔNG =====\n");
-  printf("1. Thêm nhân viên\n");
-  printf("2. Cập nhật hồ sơ\n");
-  printf("3. Xóa nhân viên\n");
-  printf("4. Hiển thị danh sách\n");
-  printf("5. Tìm kiếm nhân viên\n");
-  printf("6. Sắp xếp danh sách\n");
-  printf("7. Chấm công ngày\n");
-  printf("8. Xem bảng công\n");
-  printf("9. Thoát\n");
-  printf("=========================================\n");
-  printf("Chọn chức năng: ");
-}
-// hàm main
-int main() {
+// sắp xếp danh sách nhân viên theo lương cơ bản
+void sortEmployees() {
+  if (empCount == 0) {
+    printf("\nDanh sách nhân viên hiện tại đang trống!\n");
+    return;
+  }
+
   int choice;
+  printf("\nSắp xếp danh sách nhân viên theo lương cơ bản\n");
+  printf("1. Tăng dần\n");
+  printf("2. Giảm dần\n");
+  printf("Chọn cách sắp xếp: ");
+  scanf("%d", &choice);
+  getchar();
 
-  do {
-    showMenu();
-    scanf("%d", &choice);
-    getchar();
-
-    switch (choice) {
-    case 1:
-      addEmployee();
-      break;
-    case 2:
-      updateEmployee();
-      break;
-    case 3:
-      deleteEmployee();
-
-      break;
-    case 4:
-      displayEmployees();
-      break;
-    case 5:
-      searchEmployee();
-      break;
-
-    case 9:
-      printf("Thoát chương trình...\n");
-      break;
-    default:
-      printf("Lựa chọn không hợp lệ!\n");
+  if (choice == 1) {
+    // Sắp xếp tăng dần
+    for (int i = 0; i < empCount - 1; i++) {
+      for (int j = i + 1; j < empCount; j++) {
+        if (employees[i].baseSalary > employees[j].baseSalary) {
+          Employee temp = employees[i];
+          employees[i] = employees[j];
+          employees[j] = temp;
+        }
+      }
     }
+    printf("Đã sắp xếp theo lương tăng dần!\n");
+  } else if (choice == 2) {
+    // Sắp xếp giảm dần
+    for (int i = 0; i < empCount - 1; i++) {
+      for (int j = i + 1; j < empCount; j++) {
+        if (employees[i].baseSalary < employees[j].baseSalary) {
+          Employee temp = employees[i];
+          employees[i] = employees[j];
+          employees[j] = temp;
+        }
+      }
+    }
+    printf("Đã sắp xếp theo lương giảm dần!\n");
+  } else {
+    printf("Lựa chọn không hợp lệ!\n");
+    return;
+  }
 
-  } while (choice != 9);
-
-  return 0;
+  displayEmployees();
 }
