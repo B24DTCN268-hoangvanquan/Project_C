@@ -26,8 +26,10 @@ int main() {
   int choice;
   do {
     showMenu();
-    scanf("%d", &choice);
-    getchar();
+    scanf(" %d", &choice);
+    // getchar();
+    while (getchar() != '\n')
+      ;
     switch (choice) {
     case 1:
       addEmployee();
@@ -86,15 +88,15 @@ int findEmployeeIndex(char empId[]) {
   return -1;
 }
 
-//  thêm nhân viên
+// thêm nhân viên
 void addEmployee() {
   if (empCount >= MAX_EMP) {
-    printf(" Danh sách nhân viên đã đầy!\n");
+    printf("Danh sách nhân viên đã đầy!\n");
     return;
   }
 
   Employee e;
-  printf("\n Thêm nhân viên mới\n");
+  printf("\nThêm nhân viên mới\n");
 
   // Nhập empId
   do {
@@ -131,6 +133,7 @@ void addEmployee() {
       printf("Chức vụ không được để trống!\n");
   } while (strlen(e.position) == 0);
 
+  // Nhập lương cơ bản
   do {
     printf("Nhập lương cơ bản: ");
     scanf("%lf", &e.baseSalary);
@@ -139,21 +142,56 @@ void addEmployee() {
       printf("Lương phải lớn hơn 0!\n");
   } while (e.baseSalary <= 0);
 
-  e.workDay = 0; // mặc định theo SRS
+  // Nhập ngày công
+  int choice;
+  do {
+    printf("Ngày công:\n");
+    printf("1. Chưa có ngày công (lưu = 0)\n");
+    printf("2. Nhập số ngày công\n");
+    printf("Chọn: ");
+    scanf("%d", &choice);
+    getchar();
+
+    if (choice == 1) {
+      e.workDay = 0;
+      break;
+    } else if (choice == 2) {
+      do {
+        printf("Nhập số ngày công: ");
+        scanf("%d", &e.workDay);
+        getchar();
+        if (e.workDay <= 0) {
+          printf("Ngày công phải lớn hơn 0!\n");
+          continue;
+        }
+        break;
+      } while (1);
+      break;
+    } else {
+      printf("Lựa chọn không hợp lệ!\n");
+    }
+  } while (1);
 
   employees[empCount++] = e;
-
   printf("Thêm nhân viên thành công!\n");
 }
 
-//  cập nhật nhân viên
+// cập nhật nhân viên
 void updateEmployee() {
   char id[20];
   printf("\nCập nhật hồ sơ nhân viên\n");
 
-  printf("Nhập empId cần sửa: ");
-  fgets(id, sizeof(id), stdin);
-  id[strcspn(id, "\n")] = '\0';
+  do {
+    printf("Nhập empId cần sửa: ");
+    fgets(id, sizeof(id), stdin);
+    id[strcspn(id, "\n")] = '\0';
+
+    if (strlen(id) == 0) {
+      printf("empId không được để trống!\n");
+      continue;
+    }
+    break;
+  } while (1);
 
   int idx = findEmployeeIndex(id);
   if (idx == -1) {
@@ -161,38 +199,118 @@ void updateEmployee() {
     return;
   }
 
-  printf("Nhập chức vụ mới: ");
-  fgets(employees[idx].position, sizeof(employees[idx].position), stdin);
-  employees[idx].position[strcspn(employees[idx].position, "\n")] = '\0';
+  // cập nhật tên
+  do {
+    printf("Nhập tên mới: ");
+    fgets(employees[idx].name, sizeof(employees[idx].name), stdin);
+    employees[idx].name[strcspn(employees[idx].name, "\n")] = '\0';
 
+    if (strlen(employees[idx].name) == 0) {
+      printf("Tên không được để trống!\n");
+      continue;
+    }
+    break;
+  } while (1);
+
+  // cập nhật chức vụ
+  do {
+    printf("Nhập chức vụ mới: ");
+    fgets(employees[idx].position, sizeof(employees[idx].position), stdin);
+    employees[idx].position[strcspn(employees[idx].position, "\n")] = '\0';
+
+    if (strlen(employees[idx].position) == 0) {
+      printf("Chức vụ không được để trống!\n");
+      continue;
+    }
+    break;
+  } while (1);
+
+  // cập nhật lương
   do {
     printf("Nhập lương cơ bản mới: ");
-    scanf("%lf", &employees[idx].baseSalary);
+    if (scanf("%lf", &employees[idx].baseSalary) != 1) {
+      printf("Lương phải là số!\n");
+      while (getchar() != '\n')
+        ;
+      continue;
+    }
     getchar();
-    if (employees[idx].baseSalary <= 0)
+    if (employees[idx].baseSalary <= 0) {
       printf("Lương phải lớn hơn 0!\n");
-  } while (employees[idx].baseSalary <= 0);
+      continue;
+    }
+    break;
+  } while (1);
+
+  // cập nhật ngày công
+  int choice;
+  do {
+    printf("Ngày công:\n");
+    printf("1. Giữ nguyên (không thay đổi)\n");
+    printf("2. Đặt lại = 0 (chưa có ngày công)\n");
+    printf("3. Nhập số ngày công mới (>0)\n");
+    printf("Chọn: ");
+    scanf("%d", &choice);
+    getchar();
+
+    if (choice == 1) {
+      // giữ nguyên workDay
+      break;
+    } else if (choice == 2) {
+      employees[idx].workDay = 0;
+      break;
+    } else if (choice == 3) {
+      do {
+        printf("Nhập số ngày công mới: ");
+        scanf("%d", &employees[idx].workDay);
+        getchar();
+        if (employees[idx].workDay <= 0) {
+          printf("Ngày công phải lớn hơn 0!\n");
+          continue;
+        }
+        break;
+      } while (1);
+      break;
+    } else {
+      printf("Lựa chọn không hợp lệ!\n");
+    }
+  } while (1);
 
   printf("Cập nhật thành công!\n");
 }
+
 // quản lý nhân viên (sa thải nhân viên)
 void deleteEmployee() {
-  printf("\nXóa nhân viên\n");
   char id[20];
-  printf("Nhập empId cần xóa: ");
-  fgets(id, sizeof(id), stdin);
-  id[strcspn(id, "\n")] = '\0';
+
+  printf("\nXóa nhân viên\n");
+
+  do {
+    printf("Nhập mã nhân viên cần xóa: ");
+    fgets(id, sizeof(id), stdin);
+    id[strcspn(id, "\n")] = '\0';
+
+    if (strlen(id) == 0) {
+      printf("Mã nhân viên không được để trống.\n");
+      continue;
+    }
+    break;
+  } while (1);
+
   int idx = findEmployeeIndex(id);
   if (idx == -1) {
-    printf("Không tìm thấy nhân viên!\n");
+    printf("Không tìm thấy nhân viên có mã %s.\n", id);
     return;
   }
+
   for (int i = idx; i < empCount - 1; i++) {
     employees[i] = employees[i + 1];
   }
   empCount--;
-  printf("Xóa nhân viên thành công!\n");
+
+  printf("Xóa nhân viên %s thành công.\n", id);
 }
+
 // hiển thị danh sách nhân viên
 void displayEmployees() {
   if (empCount == 0) {
