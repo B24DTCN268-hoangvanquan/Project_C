@@ -11,7 +11,15 @@ typedef struct {
   double baseSalary;
   int workDay;
 } Employee;
+// nguyên mẫu hàm
+void addEmployee();
+void updateEmployee();
+void deleteEmployee();
+void displayEmployees();
+void showMenu();
+void searchEmployee();
 
+// mảng lưu trữ nhân viên
 Employee employees[MAX_EMP];
 int empCount = 0;
 
@@ -131,6 +139,47 @@ void deleteEmployee() {
   empCount--;
   printf("Xóa nhân viên thành công!\n");
 }
+// hiển thị danh sách nhân viên
+void displayEmployees() {
+  printf("\nDanh sách nhân viên:\n");
+  printf("------------------------------------------------------------\n");
+  printf("| %-10s | %-20s | %-15s | %-10s |\n", "EmpId", "Tên", "Chức vụ",
+         "Lương cơ bản");
+  printf("------------------------------------------------------------\n");
+  for (int i = 0; i < empCount; i++) {
+    printf("| %-10s | %-20s | %-15s | %-10.2f |\n", employees[i].empId,
+           employees[i].name, employees[i].position, employees[i].baseSalary);
+  }
+  printf("------------------------------------------------------------\n");
+}
+// tìm kiếm nhân viên theo empId hoặc tên
+void searchEmployee() {
+  char keyword[50];
+  printf("\nTìm kiếm nhân viên\n");
+  printf("Nhập empId hoặc tên cần tìm: ");
+  fgets(keyword, sizeof(keyword), stdin);
+  keyword[strcspn(keyword, "\n")] = '\0';
+
+  int found = 0;
+  printf("------------------------------------------------------------\n");
+  printf("| %-10s | %-20s | %-15s | %-10s |\n", "EmpId", "Tên", "Chức vụ",
+         "Lương cơ bản");
+  printf("------------------------------------------------------------\n");
+
+  for (int i = 0; i < empCount; i++) {
+    if (strstr(employees[i].empId, keyword) != NULL ||
+        strstr(employees[i].name, keyword) != NULL) {
+      printf("| %-10s | %-20s | %-15s | %-10.2f |\n", employees[i].empId,
+             employees[i].name, employees[i].position, employees[i].baseSalary);
+      found = 1;
+    }
+  }
+
+  if (!found) {
+    printf("Không tìm thấy nhân viên nào phù hợp!\n");
+  }
+  printf("------------------------------------------------------------\n");
+}
 
 // menu
 void showMenu() {
@@ -167,6 +216,13 @@ int main() {
       deleteEmployee();
 
       break;
+    case 4:
+      displayEmployees();
+      break;
+    case 5:
+      searchEmployee();
+      break;
+
     case 9:
       printf("Thoát chương trình...\n");
       break;
@@ -174,7 +230,7 @@ int main() {
       printf("Lựa chọn không hợp lệ!\n");
     }
 
-  } while (choice != 0);
+  } while (choice != 9);
 
   return 0;
 }
