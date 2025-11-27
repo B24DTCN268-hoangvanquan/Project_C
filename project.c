@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
 #define MAX_EMP 100
 
 typedef struct {
@@ -12,27 +12,35 @@ typedef struct {
   int workDay;
 } Employee;
 typedef struct {
-  char checkInEmpId[20]; // Mã NV
-  char checkInDate[15];  // Ngày chấm công (dd/mm/yyyy)
+  int logId;       // Mã nhật ký – tự tăng
+  char empId[20];  // Mã nhân viên
+  char date[20];   // Ngày chấm công dd/mm/yyyy
+  char status[10]; // “Đi làm” hoặc “Nghỉ”
 } TimeSheet;
+
+Employee employees[MAX_EMP];
+int empCount = 0;
 
 TimeSheet timesheets[1000]; // bảng chấm công
 int timesheetCount = 0;
 
-// nguyên mẫu hàm
+// Nguyên mẫu hàm quản lý nhân viên
 void addEmployee();
 void updateEmployee();
 void deleteEmployee();
 void displayEmployees();
-void showMenu();
 void searchEmployee();
 void sortEmployees();
+
+// Nguyên mẫu hàm chấm công
 void timeKeeping();
-void viewTimeSheet();                    //  hàm xem bảng công
-int isValidDateFormat(const char *date); //  hàm kiểm tra định dạng ngày
-int isDuplicateCheckIn(char empId[],
-                       char date[]); //  hàm kiểm tra trùng lặp chấm công
-void viewPersonalTimeSheet();        // xem bảng chấm công từng nhân viên
+void showTimesheet();
+
+// Nguyên mẫu hàm tiện ích
+int findEmployeeIndex(char empId[]);
+int isValidDateFormat(const char *date);
+int isDuplicateCheckIn(char empId[], char date[]);
+void showMenu();
 
 // hàm main
 int main() {
@@ -66,7 +74,7 @@ int main() {
       timeKeeping();
       break;
     case 8:
-      viewPersonalTimeSheet();
+      showTimesheet();
       break;
     case 9:
       printf("Thoát chương trình...\n");
@@ -75,6 +83,7 @@ int main() {
       printf("Lựa chọn không hợp lệ!\n");
     }
   } while (choice != 9);
+
   return 0;
 }
 
@@ -93,10 +102,6 @@ void showMenu() {
   printf("=========================================\n");
   printf("Chọn chức năng: ");
 }
-
-// mảng lưu trữ nhân viên
-Employee employees[MAX_EMP];
-int empCount = 0;
 
 //  tìm chỉ số nhân viên theo empId
 int findEmployeeIndex(char empId[]) {
@@ -123,12 +128,47 @@ int isValidDateFormat(const char *date) {
 }
 int isDuplicateCheckIn(char empId[], char date[]) {
   for (int i = 0; i < timesheetCount; i++) {
-    if (strcmp(timesheets[i].checkInEmpId, empId) == 0 &&
-        strcmp(timesheets[i].checkInDate, date) == 0) {
+    if (strcmp(timesheets[i].empId, empId) == 0 &&
+        strcmp(timesheets[i].date, date) == 0) {
       return 1; // đã tồn tại
     }
   }
   return 0;
+}
+
+int isValidDate(const char *date) {
+  if (!isValidDateFormat(date))
+    return 0;
+
+  int dd, mm, yyyy;
+  sscanf(date, "%d/%d/%d", &dd, &mm, &yyyy);
+
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31)
+    return 0;
+
+  // Kiểm tra số ngày hợp lệ theo tháng
+  int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  if ((yyyy % 4 == 0 && yyyy % 100 != 0) || (yyyy % 400 == 0)) {
+    daysInMonth[1] = 29; // năm nhuận
+  }
+  if (dd > daysInMonth[mm - 1])
+    return 0;
+
+  // Kiểm tra không vượt quá ngày hiện tại
+  time_t t = time(NULL);
+  struct tm *now = localtime(&t);
+  int curr_dd = now->tm_mday;
+  int curr_mm = now->tm_mon + 1;
+  int curr_yyyy = now->tm_year + 1900;
+
+  if (yyyy > curr_yyyy)
+    return 0;
+  if (yyyy == curr_yyyy && mm > curr_mm)
+    return 0;
+  if (yyyy == curr_yyyy && mm == curr_mm && dd > curr_dd)
+    return 0;
+
+  return 1;
 }
 
 // thêm nhân viên
@@ -418,33 +458,38 @@ void displayEmployees() {
 // tìm kiếm nhân viên theo empId hoặc tên
 void searchEmployee() {
   char keyword[50];
-  printf("\nTìm kiếm nhân viên\n");
+  printf("\n===== TÌM KIẾM NHÂN VIÊN =====\n");
   printf("Nhập empId hoặc tên cần tìm: ");
   fgets(keyword, sizeof(keyword), stdin);
   keyword[strcspn(keyword, "\n")] = '\0';
 
   int found = 0;
-  printf("------------------------------------------------------------\n");
-  printf("| %-10s | %-20s | %-15s | %-10s |\n", "EmpId", "Tên", "Chức vụ",
-         "Lương cơ bản");
-  printf("------------------------------------------------------------\n");
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+\n");
+  printf("| Mã NV     | Tên NV               | Chức vụ         | Lương cơ bản  "
+         "|\n");
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+\n");
 
   for (int i = 0; i < empCount; i++) {
     if (strstr(employees[i].empId, keyword) != NULL ||
         strstr(employees[i].name, keyword) != NULL) {
-      printf("| %-10s | %-20s | %-15s | %-10.2f |\n", employees[i].empId,
+      printf("| %-9s | %-20s  | %-15s | %13.2f |\n", employees[i].empId,
              employees[i].name, employees[i].position, employees[i].baseSalary);
       found = 1;
     }
   }
 
   if (!found) {
+    printf("| %-9s | %-20s | %-15s | %13s |\n", "-", "-", "-", "-");
     printf("Không tìm thấy nhân viên nào phù hợp!\n");
   }
-  printf("------------------------------------------------------------\n");
+
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+\n");
 }
 
-// sắp xếp danh sách nhân viên theo lương cơ bản
+// hàm sắp xếp danh sách nhân viên theo lương cơ bản
 void sortEmployees() {
   if (empCount == 0) {
     printf("\nDanh sách nhân viên hiện tại đang trống!\n");
@@ -490,9 +535,10 @@ void sortEmployees() {
 
   displayEmployees();
 }
-// chấm công ngày
+
+// hàm chấm công ngày
 void timeKeeping() {
-  char empId[20], date[15];
+  char empId[20], date[20];
 
   printf("\n===== CHẤM CÔNG NGÀY =====\n");
 
@@ -501,6 +547,7 @@ void timeKeeping() {
     printf("Nhập mã nhân viên: ");
     fgets(empId, sizeof(empId), stdin);
     empId[strcspn(empId, "\n")] = '\0';
+
     if (strlen(empId) == 0) {
       printf("Mã NV không được để trống!\n");
       continue;
@@ -516,10 +563,12 @@ void timeKeeping() {
   }
 
   // Nhập ngày chấm công
+  int dd, mm, yyyy;
   do {
     printf("Nhập ngày chấm công (dd/mm/yyyy): ");
     fgets(date, sizeof(date), stdin);
     date[strcspn(date, "\n")] = '\0';
+
     if (strlen(date) == 0) {
       printf("Ngày không được để trống!\n");
       continue;
@@ -528,68 +577,99 @@ void timeKeeping() {
       printf("Định dạng ngày không hợp lệ! (dd/mm/yyyy)\n");
       continue;
     }
-    break;
+
+    // Tách ngày/tháng/năm
+    sscanf(date, "%d/%d/%d", &dd, &mm, &yyyy);
+
+    // Kiểm tra tháng hợp lệ
+    if (mm < 1 || mm > 12) {
+      printf("Tháng không hợp lệ!\n");
+      continue;
+    }
+
+    // Số ngày trong tháng
+    int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if ((yyyy % 4 == 0 && yyyy % 100 != 0) || (yyyy % 400 == 0)) {
+      daysInMonth[1] = 29; // năm nhuận
+    }
+    if (dd < 1 || dd > daysInMonth[mm - 1]) {
+      printf("Ngày không hợp lệ!\n");
+      continue;
+    }
+
+    // Lấy ngày hiện tại
+    time_t t = time(NULL);
+    struct tm *now = localtime(&t);
+    int curr_dd = now->tm_mday;
+    int curr_mm = now->tm_mon + 1;
+    int curr_yyyy = now->tm_year + 1900;
+
+    // Kiểm tra không vượt quá ngày hiện tại
+    if (yyyy > curr_yyyy || (yyyy == curr_yyyy && mm > curr_mm) ||
+        (yyyy == curr_yyyy && mm == curr_mm && dd > curr_dd)) {
+      printf("Ngày không được vượt quá ngày hiện tại!\n");
+      continue;
+    }
+
+    break; // hợp lệ
   } while (1);
 
   // Kiểm tra trùng lặp
   if (isDuplicateCheckIn(empId, date)) {
-    printf("Nhân viên %s đã được chấm công vào ngày này rồi.\n", empId);
+    printf("Nhân viên %s đã chấm công ngày này rồi.\n", empId);
     return;
   }
 
-  // Cập nhật ngày công
+  // Tạo bản ghi chấm công
+  TimeSheet ts;
+  ts.logId = timesheetCount + 1; // tự tăng
+  strcpy(ts.empId, empId);
+  strcpy(ts.date, date);
+  strcpy(ts.status, "Đi làm"); // trạng thái mặc định
+
+  // Cập nhật ngày công nhân viên
   employees[idx].workDay++;
 
-  // Thêm record vào TimeSheet
-  strcpy(timesheets[timesheetCount].checkInEmpId, empId);
-  strcpy(timesheets[timesheetCount].checkInDate, date);
-  timesheetCount++;
+  // Lưu vào danh sách timesheet
+  timesheets[timesheetCount++] = ts;
 
   printf("Chấm công ngày %s cho nhân viên %s thành công.\n", date, empId);
 }
-void viewPersonalTimeSheet() {
+
+// hàm xem bảng chấm công
+void showTimesheet() {
   char viewEmpId[20];
-  printf("\n===== XEM BẢNG CÔNG CÁ NHÂN =====\n");
+  printf("\n===== XEM BẢNG CHẤM CÔNG =====\n");
+  printf("Nhập mã nhân viên cần xem: ");
+  scanf("%s", viewEmpId);
+  getchar();
 
-  // Nhập mã NV
-  do {
-    printf("Nhập mã nhân viên cần xem bảng công: ");
-    fgets(viewEmpId, sizeof(viewEmpId), stdin);
-    viewEmpId[strcspn(viewEmpId, "\n")] = '\0';
-
-    if (strlen(viewEmpId) == 0) {
-      printf("Mã NV không được để trống!\n");
-      continue;
-    }
-    break;
-  } while (1);
-
-  // Kiểm tra nhân viên có tồn tại không
   int idx = findEmployeeIndex(viewEmpId);
   if (idx == -1) {
     printf("Không tìm thấy nhân viên có mã %s.\n", viewEmpId);
     return;
   }
 
-  // Hiển thị bảng công
-  printf("\nBảng công của nhân viên %s - %s:\n", employees[idx].empId,
-         employees[idx].name);
-  printf("-------------------------------------------------\n");
-  printf("| %-5s | %-12s | %-10s |\n", "LogID", "Ngày chấm", "Trạng thái");
-  printf("-------------------------------------------------\n");
+  printf("\n===== BẢNG CÔNG CỦA NHÂN VIÊN %s - %s =====\n",
+         employees[idx].empId, employees[idx].name);
 
-  int found = 0;
+  printf("+-------+--------------+-------------+\n");
+  printf("| LogID | Ngày chấm    | Trạng thái  |\n");
+  printf("+-------+--------------+-------------+\n");
+
+  int count = 0;
   for (int i = 0; i < timesheetCount; i++) {
-    if (strcmp(timesheets[i].checkInEmpId, viewEmpId) == 0) {
-      printf("| %-5d | %-12s | %-10s |\n", i + 1, timesheets[i].checkInDate,
-             "Đi làm");
-      found = 1;
+    if (strcmp(timesheets[i].empId, viewEmpId) == 0) {
+      printf("| %-5d | %-12s | %-11s   |\n", timesheets[i].logId,
+             timesheets[i].date, timesheets[i].status);
+      count++;
     }
   }
 
-  if (!found) {
-    printf("Nhân viên %s chưa có ngày công nào.\n", viewEmpId);
+  if (count == 0) {
+    printf("| %-5s | %-12s | %-11s |\n", "-", "-", "-");
+    printf("Nhân viên này chưa có ngày công nào.\n");
   }
 
-  printf("-------------------------------------------------\n");
+  printf("+-------+--------------+-------------+\n");
 }
