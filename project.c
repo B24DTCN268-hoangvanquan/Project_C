@@ -12,10 +12,10 @@ typedef struct {
   int workDay;
 } Employee;
 typedef struct {
-  int logId;       // Mã nhật ký – tự tăng
-  char empId[20];  // Mã nhân viên
-  char date[20];   // Ngày chấm công dd/mm/yyyy
-  char status[10]; // “Đi làm” hoặc “Nghỉ”
+  int logId;
+  char empId[20];
+  char date[20];
+  char status[10];
 } TimeSheet;
 
 Employee employees[MAX_EMP];
@@ -24,7 +24,7 @@ int empCount = 0;
 TimeSheet timesheets[1000]; // bảng chấm công
 int timesheetCount = 0;
 
-// Nguyên mẫu hàm quản lý nhân viên
+// Nguyên mẫu hàm nhân viên
 void addEmployee();
 void updateEmployee();
 void deleteEmployee();
@@ -611,7 +611,7 @@ void timeKeeping() {
       continue;
     }
 
-    break; // hợp lệ
+    break;
   } while (1);
 
   // Kiểm tra trùng lặp
@@ -622,7 +622,7 @@ void timeKeeping() {
 
   // Tạo bản ghi chấm công
   TimeSheet ts;
-  ts.logId = timesheetCount + 1; // tự tăng
+  ts.logId = timesheetCount + 1;
   strcpy(ts.empId, empId);
   strcpy(ts.date, date);
   strcpy(ts.status, "Đi làm"); // trạng thái mặc định
