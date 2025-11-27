@@ -325,9 +325,11 @@ void updateEmployee() {
 // quản lý nhân viên (sa thải nhân viên)
 void deleteEmployee() {
   char id[20];
+  char confirm;
 
   printf("\nXóa nhân viên\n");
 
+  // Nhập mã nhân viên
   do {
     printf("Nhập mã nhân viên cần xóa: ");
     fgets(id, sizeof(id), stdin);
@@ -346,6 +348,17 @@ void deleteEmployee() {
     return;
   }
 
+  // Xác nhận trước khi xóa
+  printf("Bạn có chắc chắn muốn xóa nhân viên %s (%s)? (y/n): ",
+         employees[idx].name, id);
+  scanf(" %c", &confirm);
+  getchar(); // loại bỏ newline
+  if (confirm != 'y' && confirm != 'Y') {
+    printf("Hủy xóa nhân viên.\n");
+    return;
+  }
+
+  // Xóa nhân viên
   for (int i = idx; i < empCount - 1; i++) {
     employees[i] = employees[i + 1];
   }
@@ -361,22 +374,45 @@ void displayEmployees() {
     return;
   }
 
-  printf("\nDanh sách nhân viên:\n");
-  printf("---------------------------------------------------------------------"
-         "----------\n");
-  printf("| %-10s | %-20s | %-15s | %-12s | %-10s |\n", "EmpId", "Tên",
-         "Chức vụ", "Lương cơ bản", "Ngày công");
-  printf("---------------------------------------------------------------------"
-         "----------\n");
+  const int pageSize = 5; // số nhân viên mỗi trang
+  int totalPages = (empCount + pageSize - 1) / pageSize; // tính số trang
+  int page;
 
-  for (int i = 0; i < empCount; i++) {
-    printf("| %-10s | %-20s | %-15s | %-12.2f | %-10d |\n", employees[i].empId,
+  do {
+    printf("Có tổng cộng %d trang.\n", totalPages);
+    printf("Nhập số trang muốn xem (1 - %d): ", totalPages);
+    if (scanf("%d", &page) != 1) {
+      while (getchar() != '\n')
+        ; // xóa input lỗi
+      page = 0;
+    }
+    getchar(); // xóa ký tự newline
+    if (page < 1 || page > totalPages) {
+      printf("Số trang không hợp lệ! Vui lòng nhập lại.\n");
+    }
+  } while (page < 1 || page > totalPages);
+
+  printf("\n===== DANH SÁCH NHÂN VIÊN - TRANG %d/%d =====\n", page, totalPages);
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+---------------+\n");
+  printf("| Mã NV     | Tên NV               | Chức vụ         | Lương cơ bản  "
+         "| Số ngày công  |\n");
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+---------------+\n");
+
+  int start = (page - 1) * pageSize;
+  int end = start + pageSize;
+  if (end > empCount)
+    end = empCount;
+
+  for (int i = start; i < end; i++) {
+    printf("| %-9s | %-20s | %-15s | %13.2f | %13d |\n", employees[i].empId,
            employees[i].name, employees[i].position, employees[i].baseSalary,
            employees[i].workDay);
   }
 
-  printf("---------------------------------------------------------------------"
-         "----------\n");
+  printf("+-----------+----------------------+-----------------+---------------"
+         "+---------------+\n");
 }
 
 // tìm kiếm nhân viên theo empId hoặc tên
