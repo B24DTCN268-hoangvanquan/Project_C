@@ -667,28 +667,8 @@ void timeKeeping() {
     }
   }
 
-  printf("Đã chấm công ngày %s cho nhân viên %s.\n", date, empId);
-
-  // Kiểm tra trùng lặp
-  if (isDuplicateCheckIn(empId, date)) {
-    printf("Nhân viên %s đã chấm công ngày này rồi.\n", empId);
-    return;
-  }
-
-  // Tạo bản ghi chấm công
-  TimeSheet ts;
-  ts.logId = timesheetCount + 1;
-  strcpy(ts.empId, empId);
-  strcpy(ts.date, date);
-  strcpy(ts.status, "Đi làm");
-
-  // Cập nhật ngày công nhân viên
-  employees[idx].workDay++;
-
-  // Lưu vào danh sách timesheet
-  timesheets[timesheetCount++] = ts;
-
-  printf("Chấm công ngày %s cho nhân viên có ID %s thành công.\n", date, empId);
+  printf("Đã chấm công ngày %s cho nhân viên có ID %s thành công.\n", date,
+         empId);
 }
 
 // hàm xem bảng chấm công
